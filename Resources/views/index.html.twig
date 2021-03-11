@@ -1,0 +1,5 @@
+Acceptance is currently disabled.
+
+{% if start_date_time is defined and start_date_time is not null and start_date_time > date() %}
+    Next acceptance is scheduled on {{ start_date_time|date("F jS \\a\\t g:ia") }}
+{% endif %}

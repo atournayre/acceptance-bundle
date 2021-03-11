@@ -1,0 +1,48 @@
+{
+  "name": "atournayre/acceptance-bundle",
+  "description": "Acceptance bundle for Symfony 4",
+  "type": "symfony-bundle",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Aurélien Tournayre",
+      "email": "aurelien.tournayre@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Atournayre\\AcceptanceBundle\\": ""
+    },
+    "exclude-from-classmap": [
+      "/Tests/"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Atournayre\\AcceptanceBundle\\Tests\\": "Tests/"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "require": {
+    "php": "^7.2.9",
+    "ext-json": "*",
+    "ext-openssl": "*"
+  },
+  "require-dev": {
+    "symfony/phpunit-bridge": "^4.4",
+    "behat/behat": "^3.5",
+    "phpmd/phpmd": "^2.7",
+    "sebastian/phpcpd": "^4.1",
+    "squizlabs/php_codesniffer": "^3.4"
+  },
+  "conflict": {
+    "symfony/symfony": "*"
+  },
+  "extra": {
+    "symfony": {
+      "allow-contrib": false,
+      "require": "4.4.*"
+    }
+  }
+}

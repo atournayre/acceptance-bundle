@@ -1,0 +1,8 @@
+services:
+  atournayre_acceptance_listener:
+    class: Atournayre\AcceptanceBundle\Service\AcceptanceListener
+    arguments:
+      - '@parameter_bag'
+      - '@twig'
+    tags:
+      - { name: kernel.event_listener, event: kernel.request }

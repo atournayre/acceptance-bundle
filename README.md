@@ -1,0 +1,1 @@
+This bundle is a skeleton to help in bundle development.
