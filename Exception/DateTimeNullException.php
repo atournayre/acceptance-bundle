@@ -4,6 +4,6 @@ namespace Atournayre\AcceptanceBundle\Exception;
 
 use Exception;
 
-class NoEndDateException extends Exception
+class DateTimeNullException extends Exception
 {
 }

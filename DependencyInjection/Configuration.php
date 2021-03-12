@@ -25,20 +25,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('is_enabled')->defaultTrue()->end()
                 ->scalarNode('start_date_time')->defaultNull()->end()
                 ->scalarNode('end_date_time')->defaultNull()->end()
-                ->scalarNode('template')
-                    ->defaultValue('@AtournayreAcceptance/index.html.twig')
-                ->end()
-                ->scalarNode('templateError')
-                    ->defaultValue('@AtournayreAcceptance/error.html.twig')
-                ->end()
-                ->scalarNode('noEndDateMessage')
-                    ->defaultValue('No end date specified, please add it in config.')
-                ->end()
-                ->scalarNode('dateConversionErrorMessage')
-                    ->defaultValue('Oops, an error occurs during conversion of "%s" into date time.')
-                ->end()
             ->end();
-
 
         return $treeBuilder;
     }

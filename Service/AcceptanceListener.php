@@ -3,10 +3,9 @@
 namespace Atournayre\AcceptanceBundle\Service;
 
 use Atournayre\AcceptanceBundle\Exception\DateConversionException;
-use Atournayre\AcceptanceBundle\Exception\NoEndDateException;
+use Atournayre\AcceptanceBundle\Exception\DateTimeNullException;
 use DateTime;
 use Exception;
-use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -14,6 +13,9 @@ use Twig\Environment;
 
 class AcceptanceListener
 {
+    const TEMPLATE = '@AtournayreAcceptance/index.html.twig';
+    const TEMPLATE_ERROR = '@AtournayreAcceptance/error.html.twig';
+
     /**
      * @var bool
      */
@@ -30,88 +32,47 @@ class AcceptanceListener
     private $endDateTime;
 
     /**
-     * @var string
-     */
-    private $template;
-
-    /**
-     * @var string
-     */
-    private $templateError;
-
-    /**
      * @var Environment
      */
     private $environment;
-    /**
-     * @var string
-     */
-    private $noEndDateMessage;
-    /**
-     * @var string
-     */
-    private $dateConversionErrorMessage;
 
     public function __construct(ParameterBagInterface $parameterBag, Environment $environment)
     {
-        if (!$parameterBag->has('atournayre_acceptance.is_enabled')) {
-            throw new ParameterNotFoundException('atournayre_acceptance.is_enabled');
-        }
-
-        if (!$parameterBag->has('atournayre_acceptance.start_date_time')) {
-            throw new ParameterNotFoundException('atournayre_acceptance.start_date_time');
-        }
-
-        if (!$parameterBag->has('atournayre_acceptance.end_date_time')) {
-            throw new ParameterNotFoundException('atournayre_acceptance.end_date_time');
-        }
-
-        if (!$parameterBag->has('atournayre_acceptance.template')) {
-            throw new ParameterNotFoundException('atournayre_acceptance.template');
-        }
-
-        if (!$parameterBag->has('atournayre_acceptance.templateError')) {
-            throw new ParameterNotFoundException('atournayre_acceptance.templateError');
-        }
-
-        if (!$parameterBag->has('atournayre_acceptance.noEndDateMessage')) {
-            throw new ParameterNotFoundException('atournayre_acceptance.noEndDateMessage');
-        }
-
-        if (!$parameterBag->has('atournayre_acceptance.dateConversionErrorMessage')) {
-            throw new ParameterNotFoundException('atournayre_acceptance.dateConversionErrorMessage');
-        }
-
+        $this->environment = $environment;
         $this->isEnabled = $parameterBag->get('atournayre_acceptance.is_enabled');
         $this->startDateTime = $parameterBag->get('atournayre_acceptance.start_date_time');
         $this->endDateTime = $parameterBag->get('atournayre_acceptance.end_date_time');
-        $this->template = $parameterBag->get('atournayre_acceptance.template');
-        $this->templateError = $parameterBag->get('atournayre_acceptance.templateError');
-        $this->noEndDateMessage = $parameterBag->get('atournayre_acceptance.noEndDateMessage');
-        $this->dateConversionErrorMessage = $parameterBag->get('atournayre_acceptance.dateConversionErrorMessage');
-        $this->environment = $environment;
     }
 
     public function onKernelRequest(RequestEvent $event)
     {
-        try {
-            $startDateTime = $this->convertDateTime($this->startDateTime);
+        if ($this->isEnabled) {
+            try {
+                if (is_null($this->startDateTime)) {
+                    throw new DateTimeNullException('Start date time cannot be null, please provide start datetime.');
+                }
+                $startDateTime = $this->convertDateTime($this->startDateTime);
 
-            if (!$this->isEnabled) {
-                $this->setDisabledResponse($event, $startDateTime);
-            }
+                if (is_null($this->endDateTime)) {
+                    throw new DateTimeNullException('End date time cannot be null, please provide end datetime.');
+                }
+                $endDateTime = $this->convertDateTime($this->endDateTime);
 
-            if (is_null($this->endDateTime)) {
-                throw new NoEndDateException($this->noEndDateMessage);
+                if ($this->acceptanceIsDisabledForToday($startDateTime, $endDateTime)) {
+                    $responseContent = $this->setResponseContent(self::TEMPLATE, [
+                        'start_date_time' => $startDateTime,
+                    ]);
+                    $this->setResponse($event, $responseContent);
+                }
+            } catch (DateConversionException | DateTimeNullException $exception) {
+                $responseContent = $this->setResponseContent(self::TEMPLATE_ERROR, [
+                    'message' => $exception->getMessage(),
+                ]);
+                $this->setResponse($event, $responseContent);
+            } catch (Exception $exception) {
+                $responseContent = $this->setResponseContent(self::TEMPLATE_ERROR);
+                $this->setResponse($event, $responseContent);
             }
-
-            if ($this->acceptanceIsDisableForToday($startDateTime, $this->convertDateTime($this->endDateTime))) {
-                $this->setDisabledResponse($event, $startDateTime);
-            }
-        } catch (DateConversionException | NoEndDateException $exception) {
-            $this->setErrorResponse($event, $exception->getMessage());
-        } catch (Exception $exception) {
-            $this->setErrorResponse($event, 'Oops, an error occurs in acceptance.');
         }
     }
 
@@ -125,22 +86,11 @@ class AcceptanceListener
         try {
             return new DateTime($dateTime);
         } catch (Exception $exception) {
-            throw new DateConversionException($dateTime, $this->dateConversionErrorMessage);
+            throw new DateConversionException($dateTime);
         }
     }
 
-    private function setDisabledResponse(RequestEvent $event, ?DateTime $startDateTime = null): void
-    {
-        $this->setResponse(
-            $this->template,
-            [
-                'start_date_time' => $startDateTime,
-            ],
-            $event
-        );
-    }
-
-    private function acceptanceIsDisableForToday(DateTime $startDateTime, DateTime $endDateTime): bool
+    private function acceptanceIsDisabledForToday(DateTime $startDateTime, DateTime $endDateTime): bool
     {
         $currentDateTime = new DateTime();
 
@@ -148,21 +98,13 @@ class AcceptanceListener
             || $endDateTime < $currentDateTime;
     }
 
-    private function setErrorResponse(RequestEvent $event, string $message): void
+    private function setResponseContent(string $template, array $options = []): string
     {
-        $this->setResponse(
-            $this->templateError,
-            [
-                'message' => $message,
-            ],
-            $event
-        );
+        return $this->environment->render($template, $options);
     }
 
-    private function setResponse(string $template, array $options, RequestEvent $event)
+    private function setResponse(RequestEvent $event, string $responseContent): void
     {
-        $template = $this->environment->render($template, $options);
-        $response = new Response($template);
-        $event->setResponse($response);
+        $event->setResponse(new Response($responseContent));
     }
 }

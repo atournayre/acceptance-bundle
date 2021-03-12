@@ -31,9 +31,5 @@ class AtournayreAcceptanceExtension extends Extension
         $container->setParameter('atournayre_acceptance.is_enabled', $config['is_enabled']);
         $container->setParameter('atournayre_acceptance.start_date_time', $config['start_date_time']);
         $container->setParameter('atournayre_acceptance.end_date_time', $config['end_date_time']);
-        $container->setParameter('atournayre_acceptance.template', $config['template']);
-        $container->setParameter('atournayre_acceptance.templateError', $config['templateError']);
-        $container->setParameter('atournayre_acceptance.noEndDateMessage', $config['noEndDateMessage']);
-        $container->setParameter('atournayre_acceptance.dateConversionErrorMessage', $config['dateConversionErrorMessage']);
     }
 }
