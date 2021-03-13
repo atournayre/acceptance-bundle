@@ -1,6 +1,6 @@
 services:
   atournayre_acceptance_listener:
-    class: Atournayre\AcceptanceBundle\Service\AcceptanceListener
+    class: Atournayre\AcceptanceBundle\Listener\AcceptanceListener
     arguments:
       - '@parameter_bag'
       - '@twig'

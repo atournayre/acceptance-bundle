@@ -1,6 +1,6 @@
 <?php
 
-namespace Atournayre\AcceptanceBundle\Service;
+namespace Atournayre\AcceptanceBundle\Listener;
 
 use Atournayre\AcceptanceBundle\Exception\DateConversionException;
 use Atournayre\AcceptanceBundle\Exception\DateTimeNullException;
