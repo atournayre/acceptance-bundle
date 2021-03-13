@@ -22,7 +22,7 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->scalarNode('is_enabled')->defaultTrue()->end()
+                ->scalarNode('is_enabled')->defaultFalse()->end()
                 ->scalarNode('start_date_time')->defaultNull()->end()
                 ->scalarNode('end_date_time')->defaultNull()->end()
             ->end();
