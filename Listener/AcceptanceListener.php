@@ -18,55 +18,28 @@ class AcceptanceListener
     const TEMPLATE_ERROR = '@AtournayreAcceptance/error.html.twig';
 
     /**
-     * @var bool
-     */
-    private $isEnabled;
-
-    /**
-     * @var DateTime
-     */
-    private $startDateTime;
-
-    /**
-     * @var DateTime
-     */
-    private $endDateTime;
-
-    /**
      * @var Environment
      */
     private $environment;
+
     /**
      * @var AcceptanceService
      */
     private $acceptanceService;
 
-    public function __construct(ParameterBagInterface $parameterBag, Environment $environment, AcceptanceService $acceptanceService)
+    public function __construct(Environment $environment, AcceptanceService $acceptanceService)
     {
         $this->environment = $environment;
-        $this->isEnabled = $parameterBag->get('atournayre_acceptance.is_enabled');
-        $this->startDateTime = $parameterBag->get('atournayre_acceptance.start_date_time');
-        $this->endDateTime = $parameterBag->get('atournayre_acceptance.end_date_time');
         $this->acceptanceService = $acceptanceService;
     }
 
     public function onKernelRequest(RequestEvent $event)
     {
-        if ($this->isEnabled) {
+        if ($this->acceptanceService->isServiceEnabled()) {
             try {
-                if (is_null($this->startDateTime)) {
-                    throw new DateTimeNullException('Start date time cannot be null, please provide start datetime.');
-                }
-                $startDateTime = $this->acceptanceService->convertDateTime($this->startDateTime);
-
-                if (is_null($this->endDateTime)) {
-                    throw new DateTimeNullException('End date time cannot be null, please provide end datetime.');
-                }
-                $endDateTime = $this->acceptanceService->convertDateTime($this->endDateTime);
-
-                if ($this->acceptanceService->isDisabledForToday($startDateTime, $endDateTime)) {
+                if ($this->acceptanceService->isCurrentlyDisabled()) {
                     $responseContent = $this->environment->render(self::TEMPLATE, [
-                        'start_date_time' => $startDateTime,
+                        'start_date_time' => $this->acceptanceService->getStartDateTime(),
                     ]);
                     $event->setResponse(new Response($responseContent));
                 }
