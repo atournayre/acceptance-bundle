@@ -59,19 +59,19 @@ class AcceptanceListener
                 $endDateTime = $this->convertDateTime($this->endDateTime);
 
                 if ($this->acceptanceIsDisabledForToday($startDateTime, $endDateTime)) {
-                    $responseContent = $this->setResponseContent(self::TEMPLATE, [
+                    $responseContent = $this->environment->render(self::TEMPLATE, [
                         'start_date_time' => $startDateTime,
                     ]);
-                    $this->setResponse($event, $responseContent);
+                    $event->setResponse(new Response($responseContent));
                 }
             } catch (DateConversionException | DateTimeNullException $exception) {
-                $responseContent = $this->setResponseContent(self::TEMPLATE_ERROR, [
+                $responseContent = $this->environment->render(self::TEMPLATE_ERROR, [
                     'message' => $exception->getMessage(),
                 ]);
-                $this->setResponse($event, $responseContent);
+                $event->setResponse(new Response($responseContent));
             } catch (Exception $exception) {
-                $responseContent = $this->setResponseContent(self::TEMPLATE_ERROR);
-                $this->setResponse($event, $responseContent);
+                $responseContent = $this->environment->render(self::TEMPLATE_ERROR);
+                $event->setResponse(new Response($responseContent));
             }
         }
     }
@@ -96,15 +96,5 @@ class AcceptanceListener
 
         return $currentDateTime < $startDateTime
             || $endDateTime < $currentDateTime;
-    }
-
-    private function setResponseContent(string $template, array $options = []): string
-    {
-        return $this->environment->render($template, $options);
-    }
-
-    private function setResponse(RequestEvent $event, string $responseContent): void
-    {
-        $event->setResponse(new Response($responseContent));
     }
 }
