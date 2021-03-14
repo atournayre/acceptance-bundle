@@ -3,12 +3,11 @@
 namespace Atournayre\AcceptanceBundle\Service;
 
 use Atournayre\AcceptanceBundle\Exception\DateConversionException;
-use Atournayre\Interfaces\AcceptanceInterface;
 use DateTime;
 use Exception;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
-class AcceptanceService implements AcceptanceInterface
+final class AcceptanceService
 {
     /**
      * @var DateTime
