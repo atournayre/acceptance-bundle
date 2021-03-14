@@ -4,6 +4,7 @@ namespace Atournayre\AcceptanceBundle\Listener;
 
 use Atournayre\AcceptanceBundle\Exception\DateConversionException;
 use Atournayre\AcceptanceBundle\Exception\DateTimeNullException;
+use Atournayre\AcceptanceBundle\Service\AcceptanceService;
 use DateTime;
 use Exception;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -35,13 +36,18 @@ class AcceptanceListener
      * @var Environment
      */
     private $environment;
+    /**
+     * @var AcceptanceService
+     */
+    private $acceptanceService;
 
-    public function __construct(ParameterBagInterface $parameterBag, Environment $environment)
+    public function __construct(ParameterBagInterface $parameterBag, Environment $environment, AcceptanceService $acceptanceService)
     {
         $this->environment = $environment;
         $this->isEnabled = $parameterBag->get('atournayre_acceptance.is_enabled');
         $this->startDateTime = $parameterBag->get('atournayre_acceptance.start_date_time');
         $this->endDateTime = $parameterBag->get('atournayre_acceptance.end_date_time');
+        $this->acceptanceService = $acceptanceService;
     }
 
     public function onKernelRequest(RequestEvent $event)
@@ -51,14 +57,14 @@ class AcceptanceListener
                 if (is_null($this->startDateTime)) {
                     throw new DateTimeNullException('Start date time cannot be null, please provide start datetime.');
                 }
-                $startDateTime = $this->convertDateTime($this->startDateTime);
+                $startDateTime = $this->acceptanceService->convertDateTime($this->startDateTime);
 
                 if (is_null($this->endDateTime)) {
                     throw new DateTimeNullException('End date time cannot be null, please provide end datetime.');
                 }
-                $endDateTime = $this->convertDateTime($this->endDateTime);
+                $endDateTime = $this->acceptanceService->convertDateTime($this->endDateTime);
 
-                if ($this->acceptanceIsDisabledForToday($startDateTime, $endDateTime)) {
+                if ($this->acceptanceService->isDisabledForToday($startDateTime, $endDateTime)) {
                     $responseContent = $this->environment->render(self::TEMPLATE, [
                         'start_date_time' => $startDateTime,
                     ]);
@@ -74,27 +80,5 @@ class AcceptanceListener
                 $event->setResponse(new Response($responseContent));
             }
         }
-    }
-
-    /**
-     * @param string $dateTime
-     * @return DateTime
-     * @throws DateConversionException
-     */
-    private function convertDateTime(string $dateTime): DateTime
-    {
-        try {
-            return new DateTime($dateTime);
-        } catch (Exception $exception) {
-            throw new DateConversionException($dateTime);
-        }
-    }
-
-    private function acceptanceIsDisabledForToday(DateTime $startDateTime, DateTime $endDateTime): bool
-    {
-        $currentDateTime = new DateTime();
-
-        return $currentDateTime < $startDateTime
-            || $endDateTime < $currentDateTime;
     }
 }
