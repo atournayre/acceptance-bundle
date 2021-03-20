@@ -6,3 +6,5 @@ services:
       - '@Atournayre\AcceptanceBundle\Service\AcceptanceService'
     tags:
       - { name: kernel.event_listener, event: kernel.request }
+
+  Atournayre\AcceptanceBundle\Service\AcceptanceService: ~
